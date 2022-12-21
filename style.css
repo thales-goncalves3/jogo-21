@@ -14,4 +14,51 @@
 .player, .com{
     display: flex;
     justify-content: center;
+    padding: 20px
+}
+
+.player img, .com img{
+    width: 20vh;
+    margin: 1vh;
+}
+
+.actions{
+    height: 15vh;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+}
+
+.actions button{
+    border: 1px solid rgb(255, 255, 255);
+    padding: 20px;
+    width: 150px;
+    margin: 10px;
+    border-radius: 10px;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+}
+
+.buy{
+    background: rgb(5, 176, 5);
+}
+
+.stop{
+    background-color: red;
+}
+
+.countCom, .countPlayer{
+    width: 20%;
+  
+    text-align: center;
+}
+
+.buttons{
+    width: 30%;
+    display: flex;
+    justify-content: center;
+  
 }
