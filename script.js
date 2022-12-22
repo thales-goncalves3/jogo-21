@@ -1,11 +1,23 @@
 const url = "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1";
 
+class Player {
+    constructor(name, countCards) {
+        this.name = name;
+        this.countCards = countCards;
+    }
+
+}
+
+const thales = new Player('Thales', 0);
+const computador = new Player('Comp', 0);
+
+
 
 startGame();
 
 async function startGame() {
     const id = await getId();
-
+    thales.countCards = 0;
     getDeck(id);
 
     const buttonBuyCard = document.getElementById('buy');
@@ -15,8 +27,8 @@ async function startGame() {
         const divPlayer = document.getElementById('player');
         const image = document.createElement('img');
         image.src = card[0]['image'];
-        console.log(card[0]);
 
+        showSum(thales, 'countPlayer', card[0]['value']);
         divPlayer.appendChild(image);
     });
 
@@ -25,9 +37,8 @@ async function startGame() {
 
 async function getDeck(id) {
 
-    showSum('countCom', await getCardsCom(id));
-    showSum('countPlayer', await getCardsPlayer(id));
-
+    showSum(computador, 'countCom', await getCardsCom(id));
+    showSum(thales, 'countPlayer', await getCardsPlayer(id));
 
 }
 
@@ -84,28 +95,44 @@ async function getId() {
 }
 
 
-async function showSum(player, values) {
-    const scoreboard = document.getElementById(player);
+async function showSum(player, scoreDiv, values) {
+    const score = document.getElementById(scoreDiv);
 
+
+    if (Array.isArray(values)) {
+        values.forEach((element, index) => {
+            verifyCards(player, element, index);
+        })
+    } else {
+
+        verifyCards(player, values, 1);
+
+    }
+
+    score.innerHTML = player.countCards;
+
+}
+
+function verifyCards(player, element, index) {
 
     const special = ['KING', 'QUEEN', 'JACK', 'ACE'];
-    var sum = 0;
 
-    values.forEach((element, index) => {
-        if (index == 0 && element == 'ACE') {
-            sum += 11;
+    if (index == 0 && element == 'ACE') {
+        player.countCards += 11;
 
+    } else {
+        if (special.includes(element)) {
+            player.countCards += 10;
         } else {
-            if (special.includes(element)) {
-                sum += 10;
-            } else {
 
-                sum += parseInt(element);
-            }
+            player.countCards += parseInt(element);
         }
+    }
 
-    })
 
-    scoreboard.innerHTML = sum;
+    if (player.countCards > 21) {
+        alert("lose");
+        window.location.reload();
+    }
 
 }

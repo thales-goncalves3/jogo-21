@@ -25,7 +25,7 @@
 .actions{
     height: 15vh;
     display: flex;
-    justify-content: space-between;
+    justify-content: space-evenly;
     align-items: center;
     
 }
@@ -52,8 +52,13 @@
 
 .countCom, .countPlayer{
     width: 20%;
-  
     text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    border: 1px solid black;
 }
 
 .buttons{
@@ -61,4 +66,11 @@
     display: flex;
     justify-content: center;
   
+}
+
+#valueCom, #valuePlayer{
+    height: 10vh;
+    width: 100%;
+    font-size: 2em;
+    text-align: center;
 }
