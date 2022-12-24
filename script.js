@@ -21,6 +21,8 @@ async function startGame() {
     getDeck(id);
 
     const buttonBuyCard = document.getElementById('buy');
+    const buttonStop = document.getElementById('stop');
+
     buttonBuyCard.addEventListener('click', async () => {
         const card = await getCards(id, 1);
 
@@ -30,14 +32,69 @@ async function startGame() {
 
         showSum(thales, 'countPlayer', card[0]['value']);
         divPlayer.appendChild(image);
+        if (thales.countCards > 21) {
+            alert("computador ganhou");
+
+        }
     });
+
+    buttonStop.addEventListener('click', async () => {
+        if (computador.countCards > thales.countCards) {
+            alert("computador ganhou");
+        } else if (computador.countCards == thales.countCards) {
+            alert("a mesa devolve");
+        } else if (computador.countCards <= 17 && computador.countCards < thales.countCards) {
+
+            while (computador.countCards <= 17) {
+
+                const cards = await getCards(id, 1);
+
+
+                const com = document.getElementById('com');
+                const image = document.createElement('img');
+                image.src = cards[0]['image'];
+                setTimeout(() => {
+                    com.appendChild(image);
+                }, 1000);
+                showSum(computador, 'countCom', cards[0]['value']);
+
+
+                if (computador.countCards > 21) {
+
+                    setTimeout(() => {
+                        alert("jogador ganhou");
+                    }, 1000);
+
+                    break;
+
+                } else if (computador.countCards > thales.countCards) {
+
+                    setTimeout(() => {
+                        alert("computador ganhou");
+                    }, 1000);
+
+                    break;
+                } else if (computador.countCards == thales.countCards) {
+                    setTimeout(() => {
+                        alert("a mesa devolve");
+                    }, 1000);
+
+
+                    break;
+                }
+            }
+
+        } else {
+            alert("jogador ganhou");
+        }
+    })
 
 }
 
 
 async function getDeck(id) {
 
-    showSum(computador, 'countCom', await getCardsCom(id));
+    await getCardsCom(id);
     showSum(thales, 'countPlayer', await getCardsPlayer(id));
 
 }
@@ -127,12 +184,6 @@ function verifyCards(player, element, index) {
 
             player.countCards += parseInt(element);
         }
-    }
-
-
-    if (player.countCards > 21) {
-        alert("lose");
-        window.location.reload();
     }
 
 }
