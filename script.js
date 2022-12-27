@@ -4,6 +4,25 @@ const url = "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1";
 
 const buttons = document.querySelectorAll("input");
 
+function createButtons() {
+    const buyButton = document.createElement('button');
+    buyButton.classList.add('button');
+    buyButton.classList.add('buy');
+    buyButton.id = 'buy';
+    buyButton.innerHTML = 'Comprar';
+
+    const stopButton = document.createElement('button');
+    stopButton.classList.add('button');
+    stopButton.classList.add('stop');
+    stopButton.id = 'stop';
+    stopButton.innerHTML = 'Parar';
+
+    const buttonDiv = document.getElementById('buttons');
+    buttonDiv.appendChild(buyButton);
+    buttonDiv.appendChild(stopButton);
+
+}
+
 
 class Player {
     constructor(name, countCards, balance) {
@@ -13,6 +32,8 @@ class Player {
     }
 
 }
+
+const computador = new Player('Comp', 0);
 
 buttons.forEach((button) => {
     const balanceValue = document.getElementById("balanceValue");
@@ -29,32 +50,29 @@ buttons.forEach((button) => {
 })
 
 const player = getNameAndBalance();
-
-comecarJogo(player);
+console.log(player);
 
 function getNameAndBalance() {
     let name = prompt("Your name: ");
     let balance = prompt("Your balance: ");
-    const player = new Player('player', 0, parseInt(balance));
+
+
 
     if (name == null || balance == null) alert("The fields can't be null");
     else {
-        player.name = name;
+        const player = new Player(name, 0, parseInt(balance));
         const value = document.getElementById("balanceValue");
         value.innerHTML = parseInt(balance);
+        return player;
     }
 
-    return player;
 }
 
-
-const computador = new Player('Comp', 0);
-
-
+comecarJogo(player);
 
 async function comecarJogo(player) {
     const id = await pegaIdBaralho();
-
+    createButtons();
     pegaCartasIniciais(id, player);
     const botaoComprarCarta = document.getElementById('buy');
     const botaoParar = document.getElementById('stop');
@@ -68,10 +86,12 @@ async function comecarJogo(player) {
         setTimeout(() => {
             if (player.countCards > 21) {
                 alert('estourou');
+                newGameButton(player, computador);
 
             }
             else if (player.countCards == 21) alert('blackjack');
         }, 500);
+
     });
 
     botaoParar.addEventListener('click', async () => {
@@ -120,6 +140,7 @@ async function comecarJogo(player) {
 
 
             balanceValue.innerHTML = player.balance;
+            newGameButton();
         }, 2000);
 
 
@@ -127,28 +148,58 @@ async function comecarJogo(player) {
 
     })
 
+
 }
 
-async function restartGame(playerStart) {
-    const com = document.getElementById('com');
-    const player = document.getElementById('player');
-    const count = document.getElementById('countPlayer');
-    const bet = document.getElementById('bet');
-
-    while (com.firstChild) {
-        com.removeChild(com.lastChild);
-    }
-
-    while (player.firstChild) {
-        player.removeChild(player.lastChild);
-    }
-
-    playerStart.countCards = 0;
-    count.innerHTML = '0';
-    bet.innerHTML = '0';
-
-    await comecarJogo(playerStart);
+function newGameButton() {
+    const newGameDiv = document.getElementById("newGame");
+    const button = document.createElement('button');
+    button.innerHTML = 'New Game';
+    button.classList.add('button');
+    button.classList.add('buttonNewGame');
+    button.classList.add('buy');
+    button.id = 'buttonNewGame';
+    button.addEventListener('click', newGame);
+    newGameDiv.appendChild(button);
 }
+
+function newGame() {
+    player.countCards = 0;
+    computador.countCards = 0;
+    const countPlayer = document.getElementById("countPlayer");
+
+    countPlayer.innerHTML = '';
+
+    const divCom = document.getElementById("com");
+    var comChild = divCom.lastElementChild;
+
+    const divPlayer = document.getElementById("player");
+    var playerChild = divPlayer.lastElementChild;
+
+    while (comChild) {
+        divCom.removeChild(comChild);
+        comChild = divCom.lastElementChild;
+    }
+
+    while (playerChild) {
+        divPlayer.removeChild(playerChild);
+        playerChild = divPlayer.lastElementChild;
+    }
+
+    const newGameButton = document.getElementById("buttonNewGame");
+    const buy = document.getElementById("buy");
+    const stop = document.getElementById("stop");
+
+    newGameButton.remove();
+    buy.remove();
+    stop.remove();
+
+
+
+    comecarJogo(player);
+
+}
+
 
 
 function renderizaPlacar(player) {

@@ -58,7 +58,7 @@ body{
     
 }
 
-.actions button{
+.button{
     border: 3px solid rgb(255, 255, 255);
     padding: 20px;
     width: 150px;
@@ -68,6 +68,10 @@ body{
     font-weight: bold;
     color: white;
     cursor: pointer;
+}
+
+.buttonNewGame{
+    width: 60%;
 }
 
 .buy{
