@@ -1,189 +1,231 @@
+
+
 const url = "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1";
 
+const buttons = document.querySelectorAll("input");
+
+
 class Player {
-    constructor(name, countCards) {
+    constructor(name, countCards, balance) {
         this.name = name;
         this.countCards = countCards;
+        this.balance = balance;
     }
 
 }
 
-const thales = new Player('Thales', 0);
+buttons.forEach((button) => {
+    const balanceValue = document.getElementById("balanceValue");
+    const bet = document.getElementById("bet");
+    let sum = 0;
+    balanceValue.innerHTML = '0';
+    bet.innerHTML = '0';
+    button.addEventListener('click', () => {
+        player.balance -= parseInt(button.value);
+        sum += parseInt(button.value);
+        bet.innerHTML = sum;
+        balanceValue.innerHTML = player.balance;
+    })
+})
+
+const player = getNameAndBalance();
+
+comecarJogo(player);
+
+function getNameAndBalance() {
+    let name = prompt("Your name: ");
+    let balance = prompt("Your balance: ");
+    const player = new Player('player', 0, parseInt(balance));
+
+    if (name == null || balance == null) alert("The fields can't be null");
+    else {
+        player.name = name;
+        const value = document.getElementById("balanceValue");
+        value.innerHTML = parseInt(balance);
+    }
+
+    return player;
+}
+
+
 const computador = new Player('Comp', 0);
 
 
 
-startGame();
+async function comecarJogo(player) {
+    const id = await pegaIdBaralho();
 
-async function startGame() {
-    const id = await getId();
-    thales.countCards = 0;
-    getDeck(id);
+    pegaCartasIniciais(id, player);
+    const botaoComprarCarta = document.getElementById('buy');
+    const botaoParar = document.getElementById('stop');
 
-    const buttonBuyCard = document.getElementById('buy');
-    const buttonStop = document.getElementById('stop');
+    botaoComprarCarta.addEventListener('click', async () => {
+        const carta = await compraCarta(id, 1);
+        renderizaCartas(carta[0], 'player');
+        somaCartas(carta[0], '', player);
+        renderizaPlacar(player);
 
-    buttonBuyCard.addEventListener('click', async () => {
-        const card = await getCards(id, 1);
+        setTimeout(() => {
+            if (player.countCards > 21) {
+                alert('estourou');
 
-        const divPlayer = document.getElementById('player');
-        const image = document.createElement('img');
-        image.src = card[0]['image'];
-
-        showSum(thales, 'countPlayer', card[0]['value']);
-        divPlayer.appendChild(image);
-        if (thales.countCards > 21) {
-            alert("computador ganhou");
-
-        }
+            }
+            else if (player.countCards == 21) alert('blackjack');
+        }, 500);
     });
 
-    buttonStop.addEventListener('click', async () => {
-        if (computador.countCards > thales.countCards) {
-            alert("computador ganhou");
-        } else if (computador.countCards == thales.countCards) {
-            alert("a mesa devolve");
-        } else if (computador.countCards <= 17 && computador.countCards < thales.countCards) {
-
-            while (computador.countCards <= 17) {
-
-                const cards = await getCards(id, 1);
+    botaoParar.addEventListener('click', async () => {
+        const div = document.getElementById("com");
+        const image = div.getElementsByTagName('img')[1];
+        const balanceValue = document.getElementById('balanceValue');
+        const bet = document.getElementById('bet').textContent;
 
 
-                const com = document.getElementById('com');
-                const image = document.createElement('img');
-                image.src = cards[0]['image'];
-                setTimeout(() => {
-                    com.appendChild(image);
-                }, 1000);
-                showSum(computador, 'countCom', cards[0]['value']);
+        const src = image.src;
+        div.removeChild(image);
+        const newImage = document.createElement("img");
+        newImage.src = src;
+        newImage.classList.add("animate__animated");
+        newImage.classList.add("animate__flipInY");
+        div.appendChild(newImage);
 
 
-                if (computador.countCards > 21) {
-
-                    setTimeout(() => {
-                        alert("jogador ganhou");
-                    }, 1000);
-
-                    break;
-
-                } else if (computador.countCards > thales.countCards) {
-
-                    setTimeout(() => {
-                        alert("computador ganhou");
-                    }, 1000);
-
-                    break;
-                } else if (computador.countCards == thales.countCards) {
-                    setTimeout(() => {
-                        alert("a mesa devolve");
-                    }, 1000);
+        while (computador.countCards < 21 && computador.countCards <= 16) {
 
 
-                    break;
-                }
-            }
+            const carta = await compraCarta(id, 1);
+            renderizaCartas(carta[0], 'com');
+            somaCartas(carta[0], '', computador);
 
-        } else {
-            alert("jogador ganhou");
+            if (computador.countCards > player.countCards) break;
+
         }
+
+        setTimeout(() => {
+            if (computador.countCards > 21) {
+                player.balance += parseInt(bet) * 2;
+                alert("a mesa perde");
+            }
+            else if (computador.countCards < player.countCards) {
+                player.balance += parseInt(bet) * 2;
+                alert("a mesa perde");
+            }
+            else if (computador.countCards > player.countCards) {
+                alert("a mesa ganha");
+            }
+            else if (computador.countCards == player.countCards) {
+                player.balance += parseInt(bet);
+                alert("a mesa devolve")
+            };
+
+
+            balanceValue.innerHTML = player.balance;
+        }, 2000);
+
+
+
+
     })
 
 }
 
+async function restartGame(playerStart) {
+    const com = document.getElementById('com');
+    const player = document.getElementById('player');
+    const count = document.getElementById('countPlayer');
+    const bet = document.getElementById('bet');
 
-async function getDeck(id) {
+    while (com.firstChild) {
+        com.removeChild(com.lastChild);
+    }
 
-    await getCardsCom(id);
-    showSum(thales, 'countPlayer', await getCardsPlayer(id));
+    while (player.firstChild) {
+        player.removeChild(player.lastChild);
+    }
 
+    playerStart.countCards = 0;
+    count.innerHTML = '0';
+    bet.innerHTML = '0';
+
+    await comecarJogo(playerStart);
 }
 
 
-
-async function getCardsCom(id) {
-
-    const com = document.getElementById("com");
-    var values = [];
-    const cards = await getCards(id, 2);
-
-    cards.forEach(element => {
-        const image = document.createElement("img");
-        values.push(element['value']);
-        image.src = element['image'];
-
-        com.appendChild(image);
-    });
-
-    return values;
-
-}
-
-async function getCardsPlayer(id) {
-
-    const com = document.getElementById("player");
-    var values = [];
-    const cards = await getCards(id, 2);
-
-    cards.forEach(element => {
-        const image = document.createElement("img");
-        values.push(element['value']);
-        image.src = element['image'];
-
-        com.appendChild(image);
-    });
-
-    return values;
-}
-
-async function getCards(id, amount) {
-    const response = await fetch(`https://deckofcardsapi.com/api/deck/${id}/draw/?count=${amount}`);
-    const cards = await response.json();
-
-    return cards['cards'];
+function renderizaPlacar(player) {
+    const div = document.getElementById('countPlayer');
+    div.innerHTML = player.countCards;
 }
 
 
-async function getId() {
-    const response = await fetch(url);
-    const data = await response.json();
+async function pegaCartasIniciais(id, player) {
 
-    return data['deck_id'];
-}
+    const cartasJogador = await compraCarta(id, 2);
+    const cartasComputador = await compraCarta(id, 2);
 
+    for (let index = 0; index < 2; index++) {
 
-async function showSum(player, scoreDiv, values) {
-    const score = document.getElementById(scoreDiv);
-
-
-    if (Array.isArray(values)) {
-        values.forEach((element, index) => {
-            verifyCards(player, element, index);
-        })
-    } else {
-
-        verifyCards(player, values, 1);
+        renderizaCartas(cartasJogador[index], 'player');
+        renderizaCartas(cartasComputador[index], 'com');
+        somaCartas(cartasComputador[index], index, computador);
+        somaCartas(cartasJogador[index], index, player);
 
     }
 
-    score.innerHTML = player.countCards;
+    const div = document.getElementById("com");
+    const image = div.getElementsByTagName("img")[1];
+    image.classList.add('back');
+
+    renderizaPlacar(player);
 
 }
 
-function verifyCards(player, element, index) {
+function renderizaCartas(carta, jogador) {
+    const divJogador = document.getElementById(jogador);
 
-    const special = ['KING', 'QUEEN', 'JACK', 'ACE'];
+    divJogador.appendChild(criaElementoImagem(carta['image']));
 
-    if (index == 0 && element == 'ACE') {
-        player.countCards += 11;
+}
 
-    } else {
-        if (special.includes(element)) {
-            player.countCards += 10;
+function criaElementoImagem(caminho) {
+    const image = document.createElement("img");
+    image.src = caminho;
+    image.classList.add('animate__animated');
+    image.classList.add('animate__bounceInRight');
+    return image;
+}
+
+function somaCartas(carta, index = null, jogador) {
+    const especiais = ['ACE', 'QUEEN', 'KING', 'JACK'];
+    if (especiais.includes(carta['value'])) {
+        if (carta['value'] == especiais[0]) {
+            jogador.countCards += 1;
         } else {
-
-            player.countCards += parseInt(element);
+            jogador.countCards += 10;
         }
+    } else {
+        jogador.countCards += parseInt(carta['value']);
     }
 
 }
+
+
+
+
+async function compraCarta(id, quantidade) {
+    const resposta = await fetch(`https://deckofcardsapi.com/api/deck/${id}/draw/?count=${quantidade}`);
+    const carta = await resposta.json();
+    return carta['cards'];
+}
+
+
+async function pegaIdBaralho() {
+    const resposta = await fetch(url);
+    const id = await resposta.json();
+
+    return id['deck_id'];
+}
+
+
+
+
+
