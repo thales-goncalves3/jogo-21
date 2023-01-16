@@ -2,7 +2,9 @@
 
 const url = "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1";
 
-const buttons = document.querySelectorAll("input");
+const buttons = document.querySelectorAll(".betInput");
+
+
 
 function createButtons() {
     const buyButton = document.createElement('button');
@@ -25,10 +27,11 @@ function createButtons() {
 
 
 class Player {
-    constructor(name, countCards, balance) {
+    constructor(name, countCards, balance, bet) {
         this.name = name;
         this.countCards = countCards;
         this.balance = balance;
+        this.bet = bet;
     }
 
 }
@@ -38,19 +41,18 @@ const computador = new Player('Comp', 0);
 buttons.forEach((button) => {
     const balanceValue = document.getElementById("balanceValue");
     const bet = document.getElementById("bet");
-    let sum = 0;
     balanceValue.innerHTML = '0';
     bet.innerHTML = '0';
     button.addEventListener('click', () => {
         player.balance -= parseInt(button.value);
-        sum += parseInt(button.value);
-        bet.innerHTML = sum;
+        player.bet += parseInt(button.value);
+        bet.innerHTML = player.bet;
         balanceValue.innerHTML = player.balance;
     })
 })
 
 const player = getNameAndBalance();
-console.log(player);
+
 
 function getNameAndBalance() {
     let name = prompt("Your name: ");
@@ -60,7 +62,7 @@ function getNameAndBalance() {
 
     if (name == null || balance == null) alert("The fields can't be null");
     else {
-        const player = new Player(name, 0, parseInt(balance));
+        const player = new Player(name, 0, parseInt(balance), 0);
         const value = document.getElementById("balanceValue");
         value.innerHTML = parseInt(balance);
         return player;
@@ -68,20 +70,20 @@ function getNameAndBalance() {
 
 }
 
-comecarJogo(player);
+startGame(player);
 
-async function comecarJogo(player) {
-    const id = await pegaIdBaralho();
+async function startGame(player) {
+    const id = await getId();
     createButtons();
-    pegaCartasIniciais(id, player);
-    const botaoComprarCarta = document.getElementById('buy');
-    const botaoParar = document.getElementById('stop');
+    getInicialCards(id, player);
+    const buttonBuyCard = document.getElementById('buy');
+    const buttonStop = document.getElementById('stop');
 
-    botaoComprarCarta.addEventListener('click', async () => {
-        const carta = await compraCarta(id, 1);
-        renderizaCartas(carta[0], 'player');
-        somaCartas(carta[0], '', player);
-        renderizaPlacar(player);
+    buttonBuyCard.addEventListener('click', async () => {
+        const carta = await buyCard(id, 1);
+        renderCards(carta[0], 'player');
+        sumCards(carta[0], '', player);
+        renderScore(player);
 
         setTimeout(() => {
             if (player.countCards > 21) {
@@ -94,7 +96,7 @@ async function comecarJogo(player) {
 
     });
 
-    botaoParar.addEventListener('click', async () => {
+    buttonStop.addEventListener('click', async () => {
         const div = document.getElementById("com");
         const image = div.getElementsByTagName('img')[1];
         const balanceValue = document.getElementById('balanceValue');
@@ -113,9 +115,9 @@ async function comecarJogo(player) {
         while (computador.countCards < 21 && computador.countCards <= 16) {
 
 
-            const carta = await compraCarta(id, 1);
-            renderizaCartas(carta[0], 'com');
-            somaCartas(carta[0], '', computador);
+            const carta = await buyCard(id, 1);
+            renderCards(carta[0], 'com');
+            sumCards(carta[0], '', computador);
 
             if (computador.countCards > player.countCards) break;
 
@@ -165,9 +167,12 @@ function newGameButton() {
 
 function newGame() {
     player.countCards = 0;
+    player.bet = 0;
     computador.countCards = 0;
-    const countPlayer = document.getElementById("countPlayer");
 
+    const countPlayer = document.getElementById("countPlayer");
+    const bet = document.getElementById("bet");
+    bet.innerHTML = player.bet;
     countPlayer.innerHTML = '';
 
     const divCom = document.getElementById("com");
@@ -196,29 +201,29 @@ function newGame() {
 
 
 
-    comecarJogo(player);
+    startGame(player);
 
 }
 
 
 
-function renderizaPlacar(player) {
+function renderScore(player) {
     const div = document.getElementById('countPlayer');
     div.innerHTML = player.countCards;
 }
 
 
-async function pegaCartasIniciais(id, player) {
+async function getInicialCards(id, player) {
 
-    const cartasJogador = await compraCarta(id, 2);
-    const cartasComputador = await compraCarta(id, 2);
+    const cartasJogador = await buyCard(id, 2);
+    const cartasComputador = await buyCard(id, 2);
 
     for (let index = 0; index < 2; index++) {
 
-        renderizaCartas(cartasJogador[index], 'player');
-        renderizaCartas(cartasComputador[index], 'com');
-        somaCartas(cartasComputador[index], index, computador);
-        somaCartas(cartasJogador[index], index, player);
+        renderCards(cartasJogador[index], 'player');
+        renderCards(cartasComputador[index], 'com');
+        sumCards(cartasComputador[index], index, computador);
+        sumCards(cartasJogador[index], index, player);
 
     }
 
@@ -226,11 +231,11 @@ async function pegaCartasIniciais(id, player) {
     const image = div.getElementsByTagName("img")[1];
     image.classList.add('back');
 
-    renderizaPlacar(player);
+    renderScore(player);
 
 }
 
-function renderizaCartas(carta, jogador) {
+function renderCards(carta, jogador) {
     const divJogador = document.getElementById(jogador);
 
     divJogador.appendChild(criaElementoImagem(carta['image']));
@@ -245,7 +250,7 @@ function criaElementoImagem(caminho) {
     return image;
 }
 
-function somaCartas(carta, index = null, jogador) {
+function sumCards(carta, index = null, jogador) {
     const especiais = ['ACE', 'QUEEN', 'KING', 'JACK'];
     if (especiais.includes(carta['value'])) {
         if (carta['value'] == especiais[0]) {
@@ -262,14 +267,14 @@ function somaCartas(carta, index = null, jogador) {
 
 
 
-async function compraCarta(id, quantidade) {
+async function buyCard(id, quantidade) {
     const resposta = await fetch(`https://deckofcardsapi.com/api/deck/${id}/draw/?count=${quantidade}`);
     const carta = await resposta.json();
     return carta['cards'];
 }
 
 
-async function pegaIdBaralho() {
+async function getId() {
     const resposta = await fetch(url);
     const id = await resposta.json();
 
